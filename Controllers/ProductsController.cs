@@ -8,19 +8,17 @@ namespace MyApi.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _service;
-
     public ProductsController(IProductService service)
     {
         _service = service;
     }
-
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] ProductQueryDto query)
     {
-        return Ok(await _service.GetAllAsync());
+        var products = await _service.GetProductsAsync(query);
+        return Ok(products);
     }
-
     [HttpGet("{id}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
@@ -28,7 +26,6 @@ public class ProductsController : ControllerBase
         var product = await _service.GetByIdAsync(id);
         return product == null ? NotFound() : Ok(product);
     }
-
     [HttpPost]
     [Authorize(Roles = "seller")]
     public async Task<IActionResult> Create(ProductCreateDto dto)
@@ -38,7 +35,6 @@ public class ProductsController : ControllerBase
 
         return Ok(product);
     }
-
     [HttpPut("{id}")]
     [Authorize(Roles = "seller")]
     public async Task<IActionResult> Update(int id, ProductCreateDto dto)
@@ -48,7 +44,6 @@ public class ProductsController : ControllerBase
 
         return result == null ? Forbid() : Ok(result);
     }
-
     [HttpDelete("{id}")]
     [Authorize(Roles = "seller")]
     public async Task<IActionResult> Delete(int id)

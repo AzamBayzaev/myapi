@@ -1,5 +1,4 @@
 ﻿namespace MyApi.Dtos;
-
 public record RegisterDto(
     string Name,
     int Age,

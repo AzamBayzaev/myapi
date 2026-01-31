@@ -1,4 +1,1 @@
-﻿public record UserUpdateDto(
-    string Name,
-    int Age
-);
+﻿public record UserUpdateDto(string Name, int Age);
