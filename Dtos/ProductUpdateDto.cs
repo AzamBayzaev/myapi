@@ -1,5 +1,6 @@
 ﻿namespace MyApi.Dtos;
-public class ProductCreateDto
+
+public class ProductUpdateDto
 {
     public string Name { get; set; }
     public decimal Price { get; set; }

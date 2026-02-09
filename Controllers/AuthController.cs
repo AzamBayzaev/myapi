@@ -1,32 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MyApi.Service.interfaces;
 using MyApi.Dtos;
-using MyApi.Interfaces;
-namespace MyApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
-    private readonly IJwtService _jwtService;
-    public AuthController(IUserService userService, IJwtService jwtService)
-    {
-        _userService = userService;
-        _jwtService = jwtService;
-    }
+    private readonly IAuthService _auth;
+    public AuthController(IAuthService auth) => _auth = auth;
+
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto dto)
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
-        var user = await _userService.RegisterAsync(dto);
-        if (user == null) return BadRequest("User already exists");
-        var token = _jwtService.GenerateToken(user);
-        return Ok(new AuthResponseDto(token));
+        var (success, error) = await _auth.RegisterAsync(dto);
+        if (!success) return BadRequest(error);
+        return Ok("Registered");
     }
+
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto dto)
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var user = await _userService.ValidateUserAsync(dto.Email, dto.Password);
-        if (user == null) return Unauthorized("Invalid credentials");
-        var token = _jwtService.GenerateToken(user);
-        return Ok(new AuthResponseDto(token));
+        var (success, token, error) = await _auth.LoginAsync(dto);
+        if (!success) return Unauthorized(error);
+        return Ok(new { accessToken = token });
     }
 }
