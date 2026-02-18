@@ -11,7 +11,7 @@ using MyApi.Data;
 namespace MyApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260205165048_InitialCreate")]
+    [Migration("20260215094350_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -37,6 +37,7 @@ namespace MyApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("UserId")
@@ -68,7 +69,7 @@ namespace MyApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -78,7 +79,7 @@ namespace MyApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserEntity");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("MyApi.Entity.ProductEntity", b =>

@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Swashbuckle.AspNetCore.Annotations;
+﻿using Swashbuckle.AspNetCore.Annotations;
 
 namespace MyApi.Dtos
 {

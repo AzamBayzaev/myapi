@@ -1,14 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using System.Security.Claims;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using MyApi.Data;
 using MyApi.Dtos;
 using MyApi.Entity;
 
-public class ProductService :  IProductService
+public class ProductService : IProductService
 {
     private readonly AppDbContext _db;
-    public ProductService(AppDbContext db) => _db = db;
+
+    private readonly IDistributedCache _cache;
+
+    public ProductService(IDistributedCache _c, AppDbContext db)
+    {
+        _db = db;
+        _cache = _c;
+    }
 
     public async Task<ProductDto?> CreateProductAsync(ProductCreateDto dto)
     {
@@ -32,18 +39,26 @@ public class ProductService :  IProductService
 
     public async Task<IEnumerable<ProductDto>> GetProductAsync(Page_SortDto p)
     {
-        var quary = _db.Products.AsQueryable();
-        quary = p.SortBy switch
-        {
-            SortBy.Name => quary.OrderBy(p => p.Name),
-            SortBy.Price => quary.OrderBy(p => p.Price),
-            _ => quary.OrderBy(p => p.Id)
-        };
+        string key = $"products:page:{p.Page}:sort:{p.SortBy}";
         
-        var res = await  quary
-            .Skip((p.Page-1)*15)
+        var cachedJson = await _cache.GetStringAsync(key);
+        if (!string.IsNullOrEmpty(cachedJson))
+        {
+            return JsonSerializer.Deserialize<IEnumerable<ProductDto>>(cachedJson)!;
+        }
+        
+        var query = _db.Products.AsQueryable();
+        query = p.SortBy switch
+        {
+            SortBy.Name => query.OrderBy(x => x.Name),
+            SortBy.Price => query.OrderBy(x => x.Price),
+            _ => query.OrderBy(x => x.Id)
+        };
+
+        var result = await query
+            .Skip((p.Page - 1) * 15)
             .Take(15)
-            .Select(x=> new ProductDto
+            .Select(x => new ProductDto
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -51,7 +66,12 @@ public class ProductService :  IProductService
                 UserId = x.UserId
             }).ToListAsync();
         
-        return res;
+        await _cache.SetStringAsync(key, JsonSerializer.Serialize(result), new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        });
+
+        return result;
     }
 
     public async Task<ProductDto?> UpdateAsync(int Userid, int id,ProductUpdateDto dto)
