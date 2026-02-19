@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 namespace MyApi.Dtos;
 
-public enum SortBy { Id, Name, Price,Email,Role }
+public enum SortBy { Id, Name, Price,Email, Role }
 
 public class Page_SortDto
 {
